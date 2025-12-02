@@ -114,7 +114,7 @@ function showAbout() {
     message: 'H.E.L.I.O.S.',
     detail: `Heuristic Engine for Logic, Input and Output Synthesis\nVersion: ${app.getVersion()}\n\nMode: ${
       currentMode === 'aistudio' ? 'AI Studio' : 'Gemini'
-    }\n\nDeveloped by DarkLordDad\nNot affiliated with Google.`,
+    }\n\nDeveloped by darklorddad\nNot affiliated with Google.`,
     buttons: ['OK'],
     icon: path.join(__dirname, '../icon.png')
   })
@@ -129,6 +129,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
+    icon: path.join(__dirname, '../icon.png'),
     title:
       currentMode === 'aistudio'
         ? 'H.E.L.I.O.S. (AI Studio)'
@@ -306,7 +307,7 @@ if (!gotTheLock) {
           type: 'question',
           buttons: ['Google AI Studio', 'Google Gemini'],
           defaultId: 0,
-          title: 'Choose Your Interface',
+          title: 'Choose your interface',
           message: 'Welcome to H.E.L.I.O.S.! Which interface do you want to use?',
           detail: 'You can switch between them later in the View menu.',
           icon: path.join(__dirname, '../icon.png')
