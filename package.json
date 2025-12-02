@@ -28,18 +28,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "icon": "icon.png",
-      "category": "public.app-category.productivity",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "entitlements.mac.plist",
-      "entitlementsInherit": "entitlements.mac.plist"
-    },
     "linux": {
       "target": "AppImage",
       "icon": "icon.png",
