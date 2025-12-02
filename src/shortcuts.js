@@ -2,10 +2,18 @@ const { BrowserWindow } = require('electron')
 
 let shortcutsWindow = null
 
-function createShortcutsWindow(mainWindow) {
+function createShortcutsWindow(mainWindow, config) {
   if (shortcutsWindow) {
     shortcutsWindow.focus()
     return
+  }
+
+  const formatShortcut = (s) => {
+    if (!s) return 'Disabled'
+    return s
+      .split('+')
+      .map((k) => `<span class="key">${k}</span>`)
+      .join(' + ')
   }
 
   shortcutsWindow = new BrowserWindow({
@@ -53,8 +61,9 @@ function createShortcutsWindow(mainWindow) {
       <h2>⌨️ Shortcuts Guide</h2>
       <table>
         <tr><th>Action</th><th>Shortcut</th></tr>
-        <tr><td>Toggle Window</td><td><span class="key">Ctrl</span> + <span class="key">Shift</span> + <span class="key">A</span></td></tr>
-        <tr><td>New Chat</td><td><span class="key">Ctrl</span> + <span class="key">N</span></td></tr>
+        <tr><td>Toggle Window (Global)</td><td>${formatShortcut(config?.globalShortcut)}</td></tr>
+        <tr><td>New Chat (Global)</td><td>${formatShortcut(config?.newChatShortcut)}</td></tr>
+        <tr><td>New Chat (App)</td><td><span class="key">Ctrl</span> + <span class="key">N</span></td></tr>
         <tr><td>Switch Mode</td><td>(Menu) View -> Switch Mode</td></tr>
         <tr><td>Always on Top</td><td><span class="key">Ctrl</span> + <span class="key">T</span></td></tr>
         <tr><td>Quit App</td><td><span class="key">Ctrl</span> + <span class="key">Q</span></td></tr>

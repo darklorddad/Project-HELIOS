@@ -42,6 +42,23 @@ if (!fs.existsSync(userDataPath)) {
 
 app.setPath('userData', userDataPath)
 
+const configPath = path.join(app.getPath('userData'), 'config.json')
+let appConfig = {
+  globalShortcut: '',
+  newChatShortcut: 'Control+Shift+N'
+}
+
+try {
+  if (fs.existsSync(configPath)) {
+    const savedConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+    appConfig = { ...appConfig, ...savedConfig }
+  } else {
+    fs.writeFileSync(configPath, JSON.stringify(appConfig, null, 2))
+  }
+} catch (e) {
+  console.error('Failed to load config', e)
+}
+
 const modePath = path.join(app.getPath('userData'), '.mode')
 let currentMode = 'aistudio'
 
@@ -131,7 +148,7 @@ function createWindow() {
     switchMode,
     performNewChat,
     toggleSearch,
-    createShortcutsWindow,
+    createShortcutsWindow: (win) => createShortcutsWindow(win, appConfig),
     showAbout,
     onQuit
   })
@@ -242,28 +259,33 @@ if (!gotTheLock) {
     createWindow()
     createTray()
 
-    globalShortcut.register('Control+Shift+A', () => {
-      if (mainWindow.isVisible() && mainWindow.isFocused()) {
-        mainWindow.hide()
-      } else {
-        mainWindow.show()
+    if (appConfig.globalShortcut) {
+      globalShortcut.register(appConfig.globalShortcut, () => {
+        if (mainWindow.isVisible() && mainWindow.isFocused()) {
+          mainWindow.hide()
+        } else {
+          mainWindow.show()
+          mainWindow.focus()
+        }
+      })
+    }
+
+    if (appConfig.newChatShortcut) {
+      globalShortcut.register(appConfig.newChatShortcut, () => {
+        if (!mainWindow.isVisible()) mainWindow.show()
         mainWindow.focus()
-      }
-    })
 
-    globalShortcut.register('Control+Shift+N', () => {
-      if (!mainWindow.isVisible()) mainWindow.show()
-      mainWindow.focus()
+        const newChatUrl =
+          currentMode === 'aistudio'
+            ? URL_AISTUDIO_NEW_CHAT
+            : URL_GEMINI_NEW_CHAT
 
-      const newChatUrl =
-        currentMode === 'aistudio' ? URL_AISTUDIO_NEW_CHAT : URL_GEMINI_NEW_CHAT
+        if (mainWindow.webContents.getURL() !== newChatUrl) {
+          mainWindow.loadURL(newChatUrl)
+        }
 
-      if (mainWindow.webContents.getURL() !== newChatUrl) {
-        mainWindow.loadURL(newChatUrl)
-      }
-
-      mainWindow.webContents.once('did-finish-load', () => {
-        mainWindow.webContents.executeJavaScript(`
+        mainWindow.webContents.once('did-finish-load', () => {
+          mainWindow.webContents.executeJavaScript(`
           setTimeout(() => {
               const input = document.querySelector('textarea, [contenteditable="true"], .ql-editor');
               if (input) {
@@ -272,8 +294,9 @@ if (!gotTheLock) {
               }
           }, 800); 
         `)
+        })
       })
-    })
+    }
 
     const flagPath = path.join(app.getPath('userData'), '.first-run-complete')
 
@@ -304,7 +327,7 @@ if (!gotTheLock) {
         fs.writeFileSync(flagPath, 'true')
 
         setTimeout(() => {
-          createShortcutsWindow(mainWindow)
+          createShortcutsWindow(mainWindow, appConfig)
         }, 1000)
       } catch (e) {
         console.error('First run error:', e)
