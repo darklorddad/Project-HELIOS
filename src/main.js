@@ -45,7 +45,7 @@ app.setPath('userData', userDataPath)
 const configPath = path.join(app.getPath('userData'), 'config.json')
 let appConfig = {
   globalShortcut: '',
-  newChatShortcut: 'Control+Shift+N'
+  newChatShortcut: ''
 }
 
 try {
