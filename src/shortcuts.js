@@ -54,10 +54,10 @@ function createShortcutsWindow(mainWindow) {
       <table>
         <tr><th>Action</th><th>Shortcut</th></tr>
         <tr><td>Toggle Window</td><td><span class="key">Ctrl</span> + <span class="key">Shift</span> + <span class="key">A</span></td></tr>
-        <tr><td>New Chat</td><td><span class="key">Cmd/Ctrl</span> + <span class="key">N</span></td></tr>
+        <tr><td>New Chat</td><td><span class="key">Ctrl</span> + <span class="key">N</span></td></tr>
         <tr><td>Switch Mode</td><td>(Menu) View -> Switch Mode</td></tr>
-        <tr><td>Always on Top</td><td><span class="key">Cmd/Ctrl</span> + <span class="key">T</span></td></tr>
-        <tr><td>Quit App</td><td><span class="key">Cmd/Ctrl</span> + <span class="key">Q</span></td></tr>
+        <tr><td>Always on Top</td><td><span class="key">Ctrl</span> + <span class="key">T</span></td></tr>
+        <tr><td>Quit App</td><td><span class="key">Ctrl</span> + <span class="key">Q</span></td></tr>
       </table>
       <div class="footer">(Press ESC to close)</div>
     </body>

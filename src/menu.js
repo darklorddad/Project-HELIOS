@@ -1,6 +1,4 @@
 const { Menu, shell, dialog, session } = require('electron')
-const { autoUpdater } = require('electron-updater')
-const { REPO_URL, isMac } = require('./config')
 const path = require('path')
 const fs = require('fs')
 
@@ -15,50 +13,20 @@ function createMenu({
   onQuit
 }) {
   const template = [
-    ...(isMac
-      ? [
-          {
-            label: app.name,
-            submenu: [
-              {
-                label: 'About Google AI Studio (Unofficial)',
-                click: showAbout
-              },
-              { type: 'separator' },
-              { role: 'services' },
-              { type: 'separator' },
-              { role: 'hide' },
-              { role: 'hideOthers' },
-              { role: 'unhide' },
-              { type: 'separator' },
-              {
-                label: 'Quit',
-                accelerator: 'Command+Q',
-                click: onQuit
-              }
-            ]
-          }
-        ]
-      : []),
-
     {
       label: 'File',
       submenu: [
         {
           label: 'New Chat',
-          accelerator: 'CommandOrControl+N',
+          accelerator: 'Ctrl+N',
           click: performNewChat
         },
         { type: 'separator' },
-        ...(isMac
-          ? [{ role: 'close' }]
-          : [
-              {
-                label: 'Quit',
-                accelerator: 'Ctrl+Q',
-                click: onQuit
-              }
-            ])
+        {
+          label: 'Quit',
+          accelerator: 'Ctrl+Q',
+          click: onQuit
+        }
       ]
     },
     {
@@ -76,7 +44,7 @@ function createMenu({
         {
           label: 'Always on Top',
           type: 'checkbox',
-          accelerator: 'CommandOrControl+T',
+          accelerator: 'Ctrl+T',
           click: () => {
             const isTop = mainWindow.isAlwaysOnTop()
             mainWindow.setAlwaysOnTop(!isTop)
@@ -97,7 +65,7 @@ function createMenu({
         { type: 'separator' },
         {
           label: 'Find',
-          accelerator: 'CommandOrControl+F',
+          accelerator: 'Ctrl+F',
           click: () => toggleSearch(mainWindow)
         }
       ]
@@ -108,34 +76,6 @@ function createMenu({
         {
           label: 'Keyboard Shortcuts',
           click: () => createShortcutsWindow(mainWindow)
-        },
-        { type: 'separator' },
-        {
-          label: 'Check for Updates',
-          click: async () => {
-            try {
-              const result = await autoUpdater.checkForUpdates()
-              if (result && result.updateInfo.version === app.getVersion()) {
-                dialog.showMessageBox(mainWindow, {
-                  type: 'info',
-                  title: 'No Updates',
-                  message: `You are on the latest version (${app.getVersion()}).`,
-                  buttons: ['OK']
-                })
-              }
-            } catch (error) {
-              dialog.showErrorBox(
-                'Update Check Failed',
-                error.message || 'An unknown error occurred.'
-              )
-            }
-          }
-        },
-        {
-          label: 'Report Issue',
-          click: async () => {
-            await shell.openExternal(REPO_URL)
-          }
         },
         { type: 'separator' },
         {
@@ -175,12 +115,10 @@ function createMenu({
     }
   ]
 
-  if (!isMac) {
-    template[3].submenu.push(
-      { type: 'separator' },
-      { label: 'About', click: showAbout }
-    )
-  }
+  template[3].submenu.push(
+    { type: 'separator' },
+    { label: 'About', click: showAbout }
+  )
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }

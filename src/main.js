@@ -9,7 +9,6 @@ const {
   nativeImage,
   dialog
 } = require('electron')
-const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs = require('fs')
 
@@ -53,8 +52,8 @@ function switchMode() {
 
   mainWindow.setTitle(
     currentMode === 'aistudio'
-      ? 'Google AI Studio (Unofficial)'
-      : 'Google Gemini (Unofficial)'
+      ? 'H.E.L.I.O.S. (AI Studio)'
+      : 'H.E.L.I.O.S. (Gemini)'
   )
 }
 
@@ -75,11 +74,11 @@ function performNewChat() {
 function showAbout() {
   dialog.showMessageBox(mainWindow, {
     type: 'info',
-    title: 'About',
-    message: 'Google AI Studio (Unofficial)',
-    detail: `Version: ${app.getVersion()}\n\nMode: ${
+    title: 'About H.E.L.I.O.S.',
+    message: 'H.E.L.I.O.S.',
+    detail: `Heuristic Engine for Logic, Input and Output Synthesis\nVersion: ${app.getVersion()}\n\nMode: ${
       currentMode === 'aistudio' ? 'AI Studio' : 'Gemini'
-    }\n\nDeveloped by Homielab.com\nNot affiliated with Google.`,
+    }\n\nDeveloped by DarkLordDad\nNot affiliated with Google.`,
     buttons: ['OK'],
     icon: path.join(__dirname, '../icon.png')
   })
@@ -96,8 +95,8 @@ function createWindow() {
     height: 800,
     title:
       currentMode === 'aistudio'
-        ? 'Google AI Studio (Unofficial)'
-        : 'Google Gemini (Unofficial)',
+        ? 'H.E.L.I.O.S. (AI Studio)'
+        : 'H.E.L.I.O.S. (Gemini)',
     autoHideMenuBar: false,
     webPreferences: {
       nodeIntegration: false,
@@ -186,7 +185,7 @@ function createTray() {
       }
     ])
 
-    tray.setToolTip('Google AI Studio (Unofficial)')
+    tray.setToolTip('H.E.L.I.O.S.')
     tray.setContextMenu(contextMenu)
 
     tray.on('click', () => {
@@ -200,32 +199,6 @@ function createTray() {
   } catch (e) {
     console.log('Tray icon failed to load:', e)
   }
-}
-
-function setupAutoUpdater() {
-  autoUpdater.logger = require('electron-log')
-  autoUpdater.logger.transports.file.level = 'info'
-  autoUpdater.checkForUpdatesAndNotify()
-
-  autoUpdater.on('update-downloaded', () => {
-    dialog
-      .showMessageBox(mainWindow, {
-        type: 'info',
-        title: 'Update Ready',
-        message:
-          'A new version has been downloaded. Restart the app to apply the updates?',
-        buttons: ['Restart', 'Later']
-      })
-      .then((result) => {
-        if (result.response === 0) {
-          isQuitting = true
-          if (tray) {
-            tray.destroy()
-          }
-          autoUpdater.quitAndInstall(true, true)
-        }
-      })
-  })
 }
 
 const gotTheLock = app.requestSingleInstanceLock()
@@ -249,8 +222,6 @@ if (!gotTheLock) {
     app.userAgentFallback = CHROME_USER_AGENT
     createWindow()
     createTray()
-
-    setupAutoUpdater()
 
     globalShortcut.register('Control+Shift+A', () => {
       if (mainWindow.isVisible() && mainWindow.isFocused()) {
@@ -294,7 +265,7 @@ if (!gotTheLock) {
           buttons: ['Google AI Studio', 'Google Gemini'],
           defaultId: 0,
           title: 'Choose Your Interface',
-          message: 'Welcome! Which interface do you want to use?',
+          message: 'Welcome to H.E.L.I.O.S.! Which interface do you want to use?',
           detail: 'You can switch between them later in the View menu.',
           icon: path.join(__dirname, '../icon.png')
         })
@@ -307,8 +278,8 @@ if (!gotTheLock) {
         mainWindow.loadURL(targetUrl)
         mainWindow.setTitle(
           currentMode === 'aistudio'
-            ? 'Google AI Studio (Unofficial)'
-            : 'Google Gemini (Unofficial)'
+            ? 'H.E.L.I.O.S. (AI Studio)'
+            : 'H.E.L.I.O.S. (Gemini)'
         )
 
         fs.writeFileSync(flagPath, 'true')
@@ -327,6 +298,6 @@ if (!gotTheLock) {
   })
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit()
+    app.quit()
   })
 }

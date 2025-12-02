@@ -1,17 +1,12 @@
 {
-  "name": "ai-studio-desktop",
-  "productName": "Google AI Studio (Unofficial)",
+  "name": "helios",
+  "productName": "H.E.L.I.O.S.",
   "version": "1.5.2",
-  "description": "Unofficial desktop client for Google AI Studio",
+  "description": "Heuristic Engine for Logic, Input and Output Synthesis",
   "main": "src/main.js",
   "build": {
-    "appId": "com.homielab.aistudio",
-    "productName": "Google AI Studio (Unofficial)",
-    "publish": {
-      "provider": "github",
-      "owner": "homielab",
-      "repo": "ai-studio-desktop"
-    },
+    "appId": "com.darklorddad.helios",
+    "productName": "H.E.L.I.O.S.",
     "directories": {
       "output": "dist"
     },
@@ -37,11 +32,10 @@
   "scripts": {
     "start": "electron .",
     "build": "electron-builder",
-    "postinstall": "electron-builder install-app-deps",
-    "release": "env-cmd -f .env electron-builder --publish always"
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [],
-  "author": "",
+  "author": "darklorddad",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
@@ -50,7 +44,6 @@
     "env-cmd": "^11.0.0"
   },
   "dependencies": {
-    "electron-log": "^5.4.3",
-    "electron-updater": "^6.6.2"
+    "electron-log": "^5.4.3"
   }
 }

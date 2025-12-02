@@ -1,7 +1,5 @@
 const getFirefoxUserAgent = () => {
-  if (process.platform === 'darwin') {
-    return 'Macintosh; Intel Mac OS X 10.15'
-  } else if (process.platform === 'win32') {
+  if (process.platform === 'win32') {
     return 'Windows NT 10.0; Win64; x64'
   } else {
     return 'X11; Linux x86_64'
@@ -9,9 +7,7 @@ const getFirefoxUserAgent = () => {
 }
 
 const getChromeUserAgent = () => {
-  if (process.platform === 'darwin') {
-    return `Macintosh; Intel Mac OS X 10_15_7`
-  } else if (process.platform === 'win32') {
+  if (process.platform === 'win32') {
     return `Windows NT 10.0; Win64; x64`
   } else {
     return `X11; Linux x86_64`
