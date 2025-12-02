@@ -23,6 +23,25 @@ const { createMenu } = require('./menu')
 const { toggleSearch } = require('./search')
 const { createShortcutsWindow } = require('./shortcuts')
 
+const dataFolderName = 'helios-data'
+let userDataPath
+
+if (app.isPackaged) {
+  userDataPath = path.join(path.dirname(app.getPath('exe')), dataFolderName)
+} else {
+  userDataPath = path.join(__dirname, '..', dataFolderName)
+}
+
+if (!fs.existsSync(userDataPath)) {
+  try {
+    fs.mkdirSync(userDataPath, { recursive: true })
+  } catch (e) {
+    console.error('Could not create user data folder:', e)
+  }
+}
+
+app.setPath('userData', userDataPath)
+
 const modePath = path.join(app.getPath('userData'), '.mode')
 let currentMode = 'aistudio'
 
