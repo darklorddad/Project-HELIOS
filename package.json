@@ -22,11 +22,6 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "icon.png",
-      "category": "Development"
     }
   },
   "scripts": {

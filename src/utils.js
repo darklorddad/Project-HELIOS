@@ -1,17 +1,9 @@
 const getFirefoxUserAgent = () => {
-  if (process.platform === 'win32') {
-    return 'Windows NT 10.0; Win64; x64'
-  } else {
-    return 'X11; Linux x86_64'
-  }
+  return 'Windows NT 10.0; Win64; x64'
 }
 
 const getChromeUserAgent = () => {
-  if (process.platform === 'win32') {
-    return `Windows NT 10.0; Win64; x64`
-  } else {
-    return `X11; Linux x86_64`
-  }
+  return `Windows NT 10.0; Win64; x64`
 }
 
 const FIREFOX_USER_AGENT = `Mozilla/5.0 (${getFirefoxUserAgent()}; rv:145.0) Gecko/20100101 Firefox/145.0`
