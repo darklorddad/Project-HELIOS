@@ -55,6 +55,21 @@ try:
         OriginalLanguage = tree_sitter.Language
         OriginalParser = tree_sitter.Parser
 
+        # Define PatchedLanguage first so PatchedQuery can check isinstance
+        class PatchedLanguage:
+            def __init__(self, *args, **kwargs):
+                if 'existing_lang' in kwargs:
+                    self._lang = kwargs['existing_lang']
+                else:
+                    self._lang = OriginalLanguage(*args, **kwargs)
+            
+            def query(self, source):
+                q = self._lang.query(source)
+                return PatchedQuery(q)
+            
+            def __getattr__(self, name):
+                return getattr(self._lang, name)
+
         class PatchedQuery:
             def __init__(self, *args, **kwargs):
                 # Handle wrapping an existing query object
@@ -64,11 +79,20 @@ try:
                     # Unwrap args if they are PatchedLanguage
                     new_args = []
                     for arg in args:
-                        if hasattr(arg, "_lang"):
+                        if isinstance(arg, PatchedLanguage):
                             new_args.append(arg._lang)
                         else:
                             new_args.append(arg)
-                    self._query = OriginalQuery(*new_args, **kwargs)
+                    
+                    # Unwrap kwargs just in case
+                    new_kwargs = {}
+                    for k, v in kwargs.items():
+                        if isinstance(v, PatchedLanguage):
+                            new_kwargs[k] = v._lang
+                        else:
+                            new_kwargs[k] = v
+
+                    self._query = OriginalQuery(*new_args, **new_kwargs)
 
             def captures(self, node, start_point=None, end_point=None):
                 """
@@ -88,27 +112,13 @@ try:
             def __getattr__(self, name):
                 return getattr(self._query, name)
 
-        class PatchedLanguage:
-            def __init__(self, *args, **kwargs):
-                if 'existing_lang' in kwargs:
-                    self._lang = kwargs['existing_lang']
-                else:
-                    self._lang = OriginalLanguage(*args, **kwargs)
-            
-            def query(self, source):
-                q = self._lang.query(source)
-                return PatchedQuery(q)
-            
-            def __getattr__(self, name):
-                return getattr(self._lang, name)
-
         class PatchedParser:
             def __init__(self, *args, **kwargs):
                 self._parser = OriginalParser(*args, **kwargs)
             
             def set_language(self, language):
                 # Unwrap if it's our patched language
-                if hasattr(language, "_lang"):
+                if isinstance(language, PatchedLanguage):
                     self._parser.set_language(language._lang)
                 else:
                     self._parser.set_language(language)
