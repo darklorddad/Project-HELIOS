@@ -137,11 +137,24 @@ function startApiServer() {
         try {
           const data = JSON.parse(body)
           const messages = data.messages
+
+          // Aider sends the Repo Map and instructions in the 'system' message.
+          // We must combine the System prompt and the User prompt to ensure the Web UI sees the code context.
+          const systemMessage = messages.find((m) => m.role === 'system')
           const lastUserMessage = messages
             .slice()
             .reverse()
             .find((m) => m.role === 'user')
-          const prompt = lastUserMessage ? lastUserMessage.content : ''
+
+          let prompt = ''
+
+          if (systemMessage) {
+            prompt += systemMessage.content + '\n\n'
+          }
+
+          if (lastUserMessage) {
+            prompt += lastUserMessage.content
+          }
 
           if (!mainWindow) {
             throw new Error('Window not ready')
