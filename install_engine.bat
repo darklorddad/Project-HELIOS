@@ -33,9 +33,9 @@ echo  Input Aider Version
 echo ========================================================
 if defined PREV_VERSION (
     echo Previous version: %PREV_VERSION%
-    echo Please enter the version number (or press Enter to use %PREV_VERSION%)
+    echo Please enter the version number ^(or press Enter to use %PREV_VERSION%^)
 ) else (
-    echo Please enter the version number (e.g. 0.86.1)
+    echo Please enter the version number ^(e.g. 0.86.1^)
 )
 echo.
 set "USER_VERSION="
