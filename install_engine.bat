@@ -70,8 +70,8 @@ if %errorlevel% neq 0 (
 
 :: FIX: Downgrade tree-sitter and swap language packs for compatibility
 echo Fixing tree-sitter environment...
-"%VENV_DIR%\Scripts\python.exe" -m pip uninstall -y tree-sitter-language-pack
-"%VENV_DIR%\Scripts\python.exe" -m pip install tree-sitter==0.21.3 tree-sitter-languages==1.10.2
+"%VENV_DIR%\Scripts\python.exe" -m pip uninstall -y tree-sitter
+"%VENV_DIR%\Scripts\python.exe" -m pip install tree-sitter==0.24.0
 
 :: ---------------------------------------------------------
 :: 6. Create Shortcut
@@ -80,7 +80,7 @@ echo.
 echo Creating 'aider.bat' shortcut in root...
 (
     echo @echo off
-    echo "%VENV_DIR%\Scripts\aider.exe" %%*
+    echo "%VENV_DIR%\Scripts\aider.exe" %%* --model openrouter/google/gemini-3-pro-preview --edit-format diff-fenced --chat-language British-English --cache-prompt --no-stream --no-attribute-author --no-attribute-committer --no-attribute-co-authored-by --add-gitignore-files --timeout 60 --multiline --dark-mode --check-update --analytics-disable --read CONVENTIONS.md
 ) > "%~dp0engine.bat"
 
 echo.
