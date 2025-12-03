@@ -1,11 +1,23 @@
-node_modules/
-dist/
-out/
-release/
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.log
-.env
 .aider*
+wrapper/node_modules/
+wrapper/data/
+
+---
+
+# Ignore the specific Aider generated files inside the engine folder
+engine/.DS_Store
+engine/.vscode/
+engine/*.pyc
+engine/.aider*
+engine/aider_chat.egg-info/
+engine/build/
+engine/dist/
+engine/aider/__version__.py
+engine/aider/_version.py
+
+# Ignore the virtual environment inside engine (CRITICAL)
+engine/venv/
+engine/.venv/
+
+# Ignore other Aider temporary files
+engine/tmp.benchmarks/
