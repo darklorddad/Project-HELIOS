@@ -183,17 +183,46 @@ function startApiServer() {
               await sleep(1000);
 
               // 4. Wait for Generation to Complete
-              // We poll the Run button. While generating, it usually has a spinner or 'stop' action.
-              // When it returns to being a clickable 'Run' button (or the spinner stops), we are done.
+              // We poll the Run button AND check for text stability.
+              // Sometimes the spinner stops but text is still streaming/rendering.
+              
+              const getModelText = () => {
+                const modelTurns = document.querySelectorAll('[data-turn-role="Model"]');
+                if (modelTurns.length === 0) return "";
+                const lastTurn = modelTurns[modelTurns.length - 1];
+                const textElement = lastTurn.querySelector('.turn-content');
+                return textElement ? textElement.innerText.trim() : "";
+              };
+
               let attempts = 0;
-              while (attempts < 120) { // 60 seconds timeout
+              let stableIterations = 0;
+              let lastTextLength = 0;
+
+              while (attempts < 240) { // 120 seconds timeout
                 const btn = document.querySelector('button.run-button');
                 const isSpinner = btn ? btn.querySelector('.stoppable-spinner') : null;
+                const currentText = getModelText();
                 
-                // If the spinner is gone, generation is likely finished
-                if (!isSpinner) {
-                  // Double check stability of text
-                  await sleep(500); 
+                // If spinner is active, we are definitely still generating.
+                if (isSpinner) {
+                  stableIterations = 0;
+                  lastTextLength = currentText.length;
+                  await sleep(500);
+                  attempts++;
+                  continue;
+                }
+
+                // If spinner is NOT active, we check if text is stable.
+                if (currentText.length > 0 && currentText.length === lastTextLength) {
+                   stableIterations++;
+                } else {
+                   stableIterations = 0;
+                }
+
+                lastTextLength = currentText.length;
+
+                // If text has been stable for 3 iterations (1.5 seconds) and spinner is gone, we are done.
+                if (stableIterations >= 3) {
                   break;
                 }
                 
