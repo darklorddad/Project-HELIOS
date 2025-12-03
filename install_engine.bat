@@ -59,9 +59,11 @@ set "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AIDER_CHAT=%USER_VERSION%"
 :: ---------------------------------------------------------
 echo.
 echo [3/5] Setting up Virtual Environment...
-if not exist "%VENV_DIR%" (
-    python -m venv "%VENV_DIR%"
+if exist "%VENV_DIR%" (
+    echo Removing existing venv...
+    rmdir /s /q "%VENV_DIR%"
 )
+python -m venv "%VENV_DIR%"
 
 :: ---------------------------------------------------------
 :: 4. Upgrade Pip
