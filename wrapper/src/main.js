@@ -253,32 +253,40 @@ function startApiServer() {
                 // Ensure the element is rendered
                 lastTurn.scrollIntoView({ behavior: "instant", block: "end" });
 
-                // Simulate hover to ensure menu buttons are visible
-                // We target the turn container itself, and specifically the actions container if found
-                lastTurn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-                lastTurn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-                
+                // Force visibility of the actions container
+                // The container is usually .actions.hover-or-edit inside .actions-container
                 const actionsContainer = lastTurn.querySelector('.actions.hover-or-edit');
                 if (actionsContainer) {
-                    actionsContainer.style.opacity = '1'; // Force visibility just in case
-                    actionsContainer.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                    // Force styles to make it visible and clickable
+                    actionsContainer.style.opacity = '1';
+                    actionsContainer.style.visibility = 'visible';
+                    actionsContainer.style.display = 'flex';
                 }
                 
-                await sleep(200);
+                await sleep(100);
 
-                // Try to find the "more_vert" menu button to access "Copy as markdown"
-                // Based on provided HTML: <button ... aria-label="Open options" ... iconname="more_vert" ...>
-                const menuButtons = Array.from(lastTurn.querySelectorAll('button'));
-                const menuButton = menuButtons.find(btn => 
-                    btn.getAttribute('aria-label') === 'Open options' ||
-                    btn.getAttribute('iconname') === 'more_vert' ||
-                    btn.innerText.includes('more_vert') || 
-                    btn.querySelector('.material-symbols-outlined')?.innerText.includes('more_vert')
-                );
+                // Find the "More options" button
+                // Selector based on the provided HTML: <button ... iconname="more_vert" aria-label="Open options" ...>
+                const menuButton = lastTurn.querySelector('button[aria-label="Open options"], button[iconname="more_vert"]');
                 
                 if (menuButton) {
                    menuButton.click();
-                   await sleep(200); // Wait for menu to open
+                   await sleep(300); // Wait for menu animation
+                   
+                   // The menu opens in a cdk-overlay-container at the root of the body, not inside the turn
+                   // We look for the "Copy as markdown" button globally
+                   const copyMarkdownBtn = Array.from(document.querySelectorAll('button, [role="menuitem"]'))
+                      .find(el => el.innerText.includes('Copy as markdown') || el.querySelector('.markdown_copy'));
+                      
+                   if (copyMarkdownBtn) {
+                      copyMarkdownBtn.click();
+                      await sleep(200); // Wait for clipboard write
+                      return "___CLIPBOARD_COPY_SUCCESS___";
+                   } else {
+                      // Close menu if button not found
+                      document.body.click();
+                   }
+                }
                    
                    // Look for the "Copy as markdown" item in the open menu (cdk-overlay-container)
                    // We search the entire document because the menu is often attached to the body
