@@ -208,23 +208,35 @@ function startApiServer() {
           if (mainWindow.isMinimized()) mainWindow.restore()
           mainWindow.show()
 
+          // Use Clipboard for robust large text injection
+          const { clipboard } = require('electron')
+          clipboard.writeText(prompt)
+
+          // 1. Focus input and select all (prepare for paste)
+          try {
+            await mainWindow.webContents.executeJavaScript(`
+              (function() {
+                const input = document.querySelector('textarea.textarea');
+                if (!input) throw new Error("Input field not found");
+                input.focus();
+                document.execCommand('selectAll', false, null);
+              })();
+            `)
+          } catch (e) {
+            console.error("Error focusing input:", e);
+            throw e;
+          }
+
+          // 2. Paste via Electron API (bypasses DOM security restrictions)
+          mainWindow.webContents.paste()
+
+          // 3. Trigger Generation and Wait for Response
           const responseText = await mainWindow.webContents.executeJavaScript(
             `
             (async () => {
               const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-              // 1. Robust Input Finding and Injection
-              const input = document.querySelector('textarea.textarea');
-              if (!input) throw new Error("Input field not found");
-
-              input.focus();
               
-              // Use execCommand for maximum compatibility with complex editors (CodeMirror, Monaco, etc.)
-              // This simulates a paste/type action better than setting .value directly.
-              document.execCommand('selectAll', false, null);
-              document.execCommand('insertText', false, ${JSON.stringify(prompt)});
-              
-              await sleep(800); // Longer pause for UI to process the large paste
+              await sleep(1000); // Wait for paste to complete and UI to update
 
               // 2. Trigger Generation
               const runButton = document.querySelector('button.run-button');
