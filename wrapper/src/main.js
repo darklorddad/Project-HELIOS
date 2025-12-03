@@ -13,6 +13,18 @@ const path = require('path')
 const fs = require('fs')
 const http = require('http')
 
+// Enable hot reload during development
+if (!app.isPackaged) {
+  try {
+    require('electron-reload')(__dirname, {
+      electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
+      hardResetMethod: 'exit'
+    })
+  } catch (err) {
+    console.error('Failed to load electron-reload:', err)
+  }
+}
+
 const {
   URL_AISTUDIO,
   URL_AISTUDIO_NEW_CHAT,
