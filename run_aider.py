@@ -60,22 +60,25 @@ try:
     if not hasattr(tree_sitter.Query, "captures"):
         print("Monkey-patching tree_sitter.Query.captures for compatibility...")
         
-        def captures(self, node, start_point=None, end_point=None):
-            """
-            Compatibility shim for tree-sitter >= 0.24.0 which removed captures()
-            in favor of matches().
-            """
-            matches = self.matches(node, start_point, end_point)
-            results = []
-            for _, capture_map in matches:
-                for name, nodes in capture_map.items():
-                    if not isinstance(nodes, list):
-                        nodes = [nodes]
-                    for n in nodes:
-                        results.append((n, name))
-            return results
+        OriginalQuery = tree_sitter.Query
 
-        tree_sitter.Query.captures = captures
+        class PatchedQuery(OriginalQuery):
+            def captures(self, node, start_point=None, end_point=None):
+                """
+                Compatibility shim for tree-sitter >= 0.24.0 which removed captures()
+                in favor of matches().
+                """
+                matches = self.matches(node, start_point, end_point)
+                results = []
+                for _, capture_map in matches:
+                    for name, nodes in capture_map.items():
+                        if not isinstance(nodes, list):
+                            nodes = [nodes]
+                        for n in nodes:
+                            results.append((n, name))
+                return results
+
+        tree_sitter.Query = PatchedQuery
 
 except ImportError as e:
     print(f"Error importing aider: {e}")
