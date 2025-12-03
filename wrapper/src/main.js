@@ -190,8 +190,45 @@ function startApiServer() {
                 const modelTurns = document.querySelectorAll('[data-turn-role="Model"]');
                 if (modelTurns.length === 0) return "";
                 const lastTurn = modelTurns[modelTurns.length - 1];
+                
+                // Ensure the element is rendered in the DOM (handles virtual scrolling)
+                lastTurn.scrollIntoView({ behavior: "instant", block: "end" });
+
                 const textElement = lastTurn.querySelector('.turn-content');
-                return textElement ? textElement.innerText.trim() : "";
+                if (!textElement) return "";
+
+                // Clone the node to clean up UI artifacts without affecting the page
+                const clone = textElement.cloneNode(true);
+                
+                // Remove buttons (copy, edit, etc.) and icon ligatures
+                const uiArtifacts = [
+                  'button', 
+                  '[role="button"]', 
+                  '.material-icons', 
+                  '.google-symbols',
+                  'mat-icon'
+                ];
+                
+                clone.querySelectorAll(uiArtifacts.join(',')).forEach(el => el.remove());
+
+                // Remove elements containing specific UI text (ligatures/labels)
+                // "code" and language names might be text nodes, so we leave them if they aren't in buttons
+                // but "content_copy", "expand_less" are definitely noise.
+                const noiseStrings = ["content_copy", "expand_less", "more_vert", "check", "download"];
+                
+                const walker = document.createTreeWalker(clone, NodeFilter.SHOW_ELEMENT);
+                let currentNode = walker.nextNode();
+                while (currentNode) {
+                  if (noiseStrings.includes(currentNode.innerText.trim())) {
+                    const toRemove = currentNode;
+                    currentNode = walker.nextNode(); // Advance before removing
+                    toRemove.remove();
+                    continue;
+                  }
+                  currentNode = walker.nextNode();
+                }
+
+                return clone.innerText.trim();
               };
 
               let attempts = 0;
