@@ -4,20 +4,26 @@ wrapper/data/
 
 ---
 
-# Ignore the specific Aider generated files inside the engine folder
 engine/.DS_Store
 engine/.vscode/
+engine/aider.code-workspace
 engine/*.pyc
 engine/.aider*
 engine/aider_chat.egg-info/
-engine/build/
+engine/build
 engine/dist/
+engine/Gemfile.lock
+engine/_site
+engine/.jekyll-cache/
+engine/.jekyll-metadata
 engine/aider/__version__.py
 engine/aider/_version.py
-
-# Ignore the virtual environment inside engine (CRITICAL)
-engine/venv/
 engine/.venv/
-
-# Ignore other Aider temporary files
+engine/.#*
+engine/.gitattributes
 engine/tmp.benchmarks/
+engine/.docker_bash_history
+
+---
+
+engine/venv/
