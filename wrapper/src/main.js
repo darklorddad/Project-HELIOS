@@ -244,49 +244,45 @@ function startApiServer() {
               // We poll the Run button AND check for text stability.
               // Sometimes the spinner stops but text is still streaming/rendering.
               
-              const getModelText = () => {
+              const getModelText = async () => {
                 const modelTurns = document.querySelectorAll('[data-turn-role="Model"]');
                 if (modelTurns.length === 0) return "";
                 const lastTurn = modelTurns[modelTurns.length - 1];
                 
-                // Ensure the element is rendered in the DOM (handles virtual scrolling)
+                // Ensure the element is rendered
                 lastTurn.scrollIntoView({ behavior: "instant", block: "end" });
 
-                const textElement = lastTurn.querySelector('.turn-content');
-                if (!textElement) return "";
-
-                // Clone the node to clean up UI artifacts without affecting the page
-                const clone = textElement.cloneNode(true);
+                // Try to find the "more_vert" menu button to access "Copy as markdown"
+                // The structure is usually a toolbar with a menu button
+                // We look for a button that contains the 'more_vert' icon text or class
+                const menuButtons = Array.from(lastTurn.querySelectorAll('button'));
+                const menuButton = menuButtons.find(btn => 
+                    btn.innerText.includes('more_vert') || 
+                    btn.querySelector('.material-icons')?.innerText.includes('more_vert') ||
+                    btn.querySelector('.google-symbols')?.innerText.includes('more_vert')
+                );
                 
-                // Remove buttons (copy, edit, etc.) and icon ligatures
-                const uiArtifacts = [
-                  'button', 
-                  '[role="button"]', 
-                  '.material-icons', 
-                  '.google-symbols',
-                  'mat-icon'
-                ];
-                
-                clone.querySelectorAll(uiArtifacts.join(',')).forEach(el => el.remove());
-
-                // Remove elements containing specific UI text (ligatures/labels)
-                // "code" and language names might be text nodes, so we leave them if they aren't in buttons
-                // but "content_copy", "expand_less" are definitely noise.
-                const noiseStrings = ["content_copy", "expand_less", "more_vert", "check", "download"];
-                
-                const walker = document.createTreeWalker(clone, NodeFilter.SHOW_ELEMENT);
-                let currentNode = walker.nextNode();
-                while (currentNode) {
-                  if (noiseStrings.includes(currentNode.innerText.trim())) {
-                    const toRemove = currentNode;
-                    currentNode = walker.nextNode(); // Advance before removing
-                    toRemove.remove();
-                    continue;
-                  }
-                  currentNode = walker.nextNode();
+                if (menuButton) {
+                   menuButton.click();
+                   await sleep(200); // Wait for menu to open
+                   
+                   // Look for the "Copy as markdown" item in the open menu (cdk-overlay-container)
+                   // We search the entire document because the menu is often attached to the body
+                   const copyMarkdownBtn = Array.from(document.querySelectorAll('button, [role="menuitem"]'))
+                      .find(el => el.innerText.includes('Copy as markdown') || el.querySelector('.markdown_copy'));
+                      
+                   if (copyMarkdownBtn) {
+                      copyMarkdownBtn.click();
+                      await sleep(100); // Wait for clipboard write
+                      // Close menu if it didn't close automatically (optional, usually clicking closes it)
+                      // We can return a special flag or handle clipboard reading in the main process
+                      return "___CLIPBOARD_COPY_SUCCESS___";
+                   }
                 }
 
-                return clone.innerText.trim();
+                // Fallback to innerText if button not found (e.g. older UI or different layout)
+                const textElement = lastTurn.querySelector('.turn-content');
+                return textElement ? textElement.innerText.trim() : "";
               };
 
               let attempts = 0;
@@ -325,19 +321,19 @@ function startApiServer() {
                 attempts++;
               }
 
-              // 5. Extract Response using specific Data Attributes
-              const modelTurns = document.querySelectorAll('[data-turn-role="Model"]');
-              if (modelTurns.length === 0) return "No response found.";
-
-              const lastTurn = modelTurns[modelTurns.length - 1];
-              
-              // Extract text from the markdown nodes, ignoring hidden elements if necessary
-              // The sample shows text resides in ms-cmark-node -> p -> span
-              const textElement = lastTurn.querySelector('.turn-content');
-              return textElement ? textElement.innerText.trim() : "Empty response.";
+              // 5. Extract Response
+              return await getModelText();
             })()
             `
           )
+          
+          let finalResponseText = responseText;
+          
+          // If the browser script successfully clicked "Copy as markdown", read from clipboard
+          if (responseText === "___CLIPBOARD_COPY_SUCCESS___") {
+             const { clipboard } = require('electron');
+             finalResponseText = clipboard.readText();
+          }
 
           const response = {
             id: 'chatcmpl-' + Date.now(),
@@ -347,7 +343,7 @@ function startApiServer() {
             choices: [
               {
                 index: 0,
-                message: { role: 'assistant', content: responseText },
+                message: { role: 'assistant', content: finalResponseText },
                 finish_reason: 'stop'
               }
             ]
