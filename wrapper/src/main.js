@@ -11,6 +11,7 @@ const {
 } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const http = require('http')
 
 const {
   URL_AISTUDIO,
@@ -123,6 +124,120 @@ function showAbout() {
 function onQuit() {
   isQuitting = true
   app.quit()
+}
+
+function startApiServer() {
+  const server = http.createServer(async (req, res) => {
+    if (req.method === 'POST' && req.url === '/v1/chat/completions') {
+      let body = ''
+      req.on('data', (chunk) => {
+        body += chunk.toString()
+      })
+      req.on('end', async () => {
+        try {
+          const data = JSON.parse(body)
+          const messages = data.messages
+          const lastUserMessage = messages
+            .slice()
+            .reverse()
+            .find((m) => m.role === 'user')
+          const prompt = lastUserMessage ? lastUserMessage.content : ''
+
+          if (!mainWindow) {
+            throw new Error('Window not ready')
+          }
+
+          if (mainWindow.isMinimized()) mainWindow.restore()
+          mainWindow.show()
+
+          const responseText = await mainWindow.webContents.executeJavaScript(
+            `
+            (async () => {
+              const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+              
+              const getInput = () => document.querySelector('textarea, [contenteditable="true"], .ql-editor');
+              const getSendButton = () => document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], .send-button, button[data-testid="send-button"]');
+
+              const input = getInput();
+              if (!input) throw new Error("Input field not found");
+              
+              input.focus();
+              document.execCommand('selectAll', false, null);
+              document.execCommand('insertText', false, ${JSON.stringify(prompt)});
+              await sleep(500);
+
+              const btn = getSendButton();
+              if (btn) {
+                btn.click();
+              } else {
+                const event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', which: 13, bubbles: true });
+                input.dispatchEvent(event);
+              }
+              
+              await sleep(2000);
+              
+              let lastText = "";
+              let stableCount = 0;
+              const maxRetries = 120; 
+              
+              for(let i=0; i<maxRetries; i++) {
+                 await sleep(500);
+                 const allText = document.body.innerText; 
+                 
+                 if (allText.length > lastText.length) {
+                    lastText = allText;
+                    stableCount = 0;
+                 } else {
+                    stableCount++;
+                 }
+                 
+                 if (stableCount > 4 && i > 5) break;
+              }
+              
+              // Attempt to find the last response. 
+              // Note: These selectors are generic and might need tuning for specific web apps.
+              const messageBlocks = document.querySelectorAll('.model-response-text, .message-content, [data-message-author="model"], .response-content');
+              if (messageBlocks.length > 0) {
+                return messageBlocks[messageBlocks.length - 1].innerText;
+              }
+              
+              // Fallback: return the last chunk of text from the body if specific selectors fail
+              return document.body.innerText.slice(-2000); 
+            })()
+            `
+          )
+
+          const response = {
+            id: 'chatcmpl-' + Date.now(),
+            object: 'chat.completion',
+            created: Math.floor(Date.now() / 1000),
+            model: data.model,
+            choices: [
+              {
+                index: 0,
+                message: { role: 'assistant', content: responseText },
+                finish_reason: 'stop'
+              }
+            ]
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify(response))
+        } catch (e) {
+          console.error('API Error:', e)
+          res.writeHead(500, { 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ error: e.message }))
+        }
+      })
+    } else {
+      res.writeHead(404)
+      res.end()
+    }
+  })
+
+  server.listen(3000, '127.0.0.1', () => {
+    console.log('Local LLM wrapper running on http://127.0.0.1:3000')
+  })
 }
 
 function createWindow() {
@@ -257,6 +372,7 @@ if (!gotTheLock) {
 
   app.on('ready', () => {
     app.userAgentFallback = CHROME_USER_AGENT
+    startApiServer()
     createWindow()
     createTray()
 
