@@ -21,19 +21,35 @@ if not exist "%~dp0%ENGINE_DIR%\pyproject.toml" (
 :: ---------------------------------------------------------
 :: 2. Ask User for Version Number
 :: ---------------------------------------------------------
+set "VERSION_FILE=%~dp0.aider_version"
+set "PREV_VERSION="
+if exist "%VERSION_FILE%" (
+    set /p PREV_VERSION=<"%VERSION_FILE%"
+)
+
 echo.
 echo ========================================================
 echo  Input Aider Version
 echo ========================================================
-echo Please enter the version number (e.g. 0.86.1)
+if defined PREV_VERSION (
+    echo Previous version: %PREV_VERSION%
+    echo Please enter the version number (or press Enter to use %PREV_VERSION%)
+) else (
+    echo Please enter the version number (e.g. 0.86.1)
+)
 echo.
+set "USER_VERSION="
 set /p USER_VERSION="Enter Version Number: "
+
+if "%USER_VERSION%"=="" set "USER_VERSION=%PREV_VERSION%"
 
 if "%USER_VERSION%"=="" (
     echo [ERROR] Version cannot be empty.
     pause
     exit /b 1
 )
+
+(echo %USER_VERSION%) > "%VERSION_FILE%"
 
 :: Set the environment variable to prevent crash
 set "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_AIDER_CHAT=%USER_VERSION%"
