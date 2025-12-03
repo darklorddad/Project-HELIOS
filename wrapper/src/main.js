@@ -16,12 +16,25 @@ const http = require('http')
 // Enable hot reload during development
 if (!app.isPackaged) {
   try {
-    require('electron-reload')(__dirname, {
-      electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
-      hardResetMethod: 'exit'
-    })
+    const electronReload = require('electron-reload')
+    const electronPath = path.join(
+      __dirname,
+      '..',
+      'node_modules',
+      '.bin',
+      process.platform === 'win32' ? 'electron.cmd' : 'electron'
+    )
+
+    if (fs.existsSync(electronPath)) {
+      electronReload(__dirname, {
+        electron: electronPath,
+        hardResetMethod: 'exit'
+      })
+    } else {
+      console.log('Electron binary not found for hot reload, skipping.')
+    }
   } catch (err) {
-    console.error('Failed to load electron-reload:', err)
+    console.log('electron-reload not found or error initializing, skipping hot reload:', err)
   }
 }
 
