@@ -154,61 +154,63 @@ function startApiServer() {
             `
             (async () => {
               const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-              
-              const getInput = () => document.querySelector('textarea.textarea[aria-label*="Type something"]');
-              const getSendButton = () => document.querySelector('button[aria-label="Run"], button.run-button');
 
-              const getResponseText = () => {
-                const selectors = [
-                  '.chat-turn-container.model .ms-prompt-chunk span',
-                  '.chat-turn-container.model .turn-content span',
-                  '[data-turn-role="Model"] .ms-prompt-chunk span'
-                ];
-                
-                for (const selector of selectors) {
-                  const elements = document.querySelectorAll(selector);
-                  if (elements.length > 0) {
-                    const text = elements[elements.length - 1].innerText;
-                    if (text.length > 20) return text.trim();
-                  }
-                }
-                return '';
-              };
-
-              const input = getInput();
+              // 1. Robust Input Finding and Injection
+              const input = document.querySelector('textarea.textarea');
               if (!input) throw new Error("Input field not found");
-              
-              input.focus();
-              document.execCommand('selectAll', false, null);
-              document.execCommand('insertText', false, ${JSON.stringify(prompt)});
-              await sleep(500);
 
-              const btn = getSendButton();
-              if (btn) {
-                btn.click();
-                await sleep(300);
+              // Angular/React often requires focus and event dispatching to register changes
+              input.focus();
+              input.value = ${JSON.stringify(prompt)};
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+              
+              await sleep(200); // Short pause for UI to update state
+
+              // 2. Trigger Generation
+              const runButton = document.querySelector('button.run-button');
+              if (runButton && !runButton.disabled) {
+                runButton.click();
               } else {
+                // Fallback to Enter key if button is unavailable/disabled
                 input.dispatchEvent(new KeyboardEvent('keydown', { 
-                  key: 'Enter', code: 'Enter', which: 13, bubbles: true 
+                  key: 'Enter', code: 'Enter', which: 13, bubbles: true, ctrlKey: true 
                 }));
               }
-              
-              await sleep(2000);
-              
-              let lastText = '';
-              let stableCount = 0;
-              
-              for (let i = 0; i < 60; i++) {
+
+              // 3. Wait for Generation to Start (Run button changes state)
+              // We wait briefly to ensure the UI enters "loading" state
+              await sleep(1000);
+
+              // 4. Wait for Generation to Complete
+              // We poll the Run button. While generating, it usually has a spinner or 'stop' action.
+              // When it returns to being a clickable 'Run' button (or the spinner stops), we are done.
+              let attempts = 0;
+              while (attempts < 120) { // 60 seconds timeout
+                const btn = document.querySelector('button.run-button');
+                const isSpinner = btn ? btn.querySelector('.stoppable-spinner') : null;
+                
+                // If the spinner is gone, generation is likely finished
+                if (!isSpinner) {
+                  // Double check stability of text
+                  await sleep(500); 
+                  break;
+                }
+                
                 await sleep(500);
-                const currentText = getResponseText();
-                
-                if (currentText === lastText) stableCount++;
-                else { stableCount = 0; lastText = currentText; }
-                
-                if (stableCount > 5 && lastText.length > 50) break;
+                attempts++;
               }
+
+              // 5. Extract Response using specific Data Attributes
+              const modelTurns = document.querySelectorAll('[data-turn-role="Model"]');
+              if (modelTurns.length === 0) return "No response found.";
+
+              const lastTurn = modelTurns[modelTurns.length - 1];
               
-              return lastText || "No response received";
+              // Extract text from the markdown nodes, ignoring hidden elements if necessary
+              // The sample shows text resides in ms-cmark-node -> p -> span
+              const textElement = lastTurn.querySelector('.turn-content');
+              return textElement ? textElement.innerText.trim() : "Empty response.";
             })()
             `
           )
