@@ -146,6 +146,10 @@ function startApiServer() {
             .reverse()
             .find((m) => m.role === 'user')
 
+          console.log('Received messages from Aider:', messages.map(m => m.role));
+          if (systemMessage) console.log('System message found, length:', systemMessage.content.length);
+          else console.log('WARNING: No system message found.');
+
           let prompt = ''
 
           if (systemMessage) {
@@ -172,13 +176,14 @@ function startApiServer() {
               const input = document.querySelector('textarea.textarea');
               if (!input) throw new Error("Input field not found");
 
-              // Angular/React often requires focus and event dispatching to register changes
               input.focus();
-              input.value = ${JSON.stringify(prompt)};
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-              input.dispatchEvent(new Event('change', { bubbles: true }));
               
-              await sleep(200); // Short pause for UI to update state
+              // Use execCommand for maximum compatibility with complex editors (CodeMirror, Monaco, etc.)
+              // This simulates a paste/type action better than setting .value directly.
+              document.execCommand('selectAll', false, null);
+              document.execCommand('insertText', false, ${JSON.stringify(prompt)});
+              
+              await sleep(800); // Longer pause for UI to process the large paste
 
               // 2. Trigger Generation
               const runButton = document.querySelector('button.run-button');
