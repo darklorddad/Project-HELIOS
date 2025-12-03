@@ -44,18 +44,9 @@ find_and_exec_in_venv()
 sys.path.insert(0, os.path.abspath("engine"))
 
 try:
-    # 3. Import the exceptions module
-    from aider import exceptions
-    from aider.exceptions import ExInfo
-
-    # 4. Apply the Hotfix
-    # We manually add the missing exception to the list.
-    print("Monkey-patching BadGatewayError into aider.exceptions...")
-    exceptions.EXCEPTIONS.append(
-        ExInfo("BadGatewayError", True, "The API provider's servers are down or overloaded.")
-    )
-
-    # 5. Patch tree_sitter.Query.captures if missing (for tree-sitter >= 0.24.0)
+    # 3. Patch tree_sitter.Query.captures if missing (for tree-sitter >= 0.24.0)
+    # We do this BEFORE importing aider to ensure any 'from tree_sitter import Query'
+    # in aider modules picks up our patched version.
     import tree_sitter
     if not hasattr(tree_sitter.Query, "captures"):
         print("Monkey-patching tree_sitter.Query.captures for compatibility...")
@@ -85,6 +76,17 @@ try:
                 return getattr(self._query, name)
 
         tree_sitter.Query = PatchedQuery
+
+    # 4. Import the exceptions module
+    from aider import exceptions
+    from aider.exceptions import ExInfo
+
+    # 5. Apply the Hotfix
+    # We manually add the missing exception to the list.
+    print("Monkey-patching BadGatewayError into aider.exceptions...")
+    exceptions.EXCEPTIONS.append(
+        ExInfo("BadGatewayError", True, "The API provider's servers are down or overloaded.")
+    )
 
 except ImportError as e:
     print(f"Error importing aider: {e}")
