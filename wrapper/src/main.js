@@ -17,22 +17,10 @@ const http = require('http')
 if (!app.isPackaged) {
   try {
     const electronReload = require('electron-reload')
-    const electronPath = path.join(
-      __dirname,
-      '..',
-      'node_modules',
-      '.bin',
-      process.platform === 'win32' ? 'electron.cmd' : 'electron'
-    )
-
-    if (fs.existsSync(electronPath)) {
-      electronReload(__dirname, {
-        electron: electronPath,
-        hardResetMethod: 'exit'
-      })
-    } else {
-      console.log('Electron binary not found for hot reload, skipping.')
-    }
+    electronReload(__dirname, {
+      electron: require(path.join(__dirname, '..', 'node_modules', 'electron')),
+      hardResetMethod: 'exit'
+    })
   } catch (err) {
     console.log('electron-reload not found or error initializing, skipping hot reload:', err)
   }
