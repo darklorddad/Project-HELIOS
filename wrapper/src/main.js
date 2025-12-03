@@ -155,21 +155,40 @@ function startApiServer() {
           // We must combine ALL system messages to ensure the Web UI sees the full context.
           const systemMessages = messages.filter((m) => m.role === 'system')
 
-          // Aider sometimes splits the file context and the actual prompt into multiple 'user' messages at the end.
-          // We need to capture all trailing user messages, not just the very last one.
-          const trailingUserMessages = []
-          for (let i = messages.length - 1; i >= 0; i--) {
-            if (messages[i].role === 'user') {
-              trailingUserMessages.unshift(messages[i])
-            } else if (messages[i].role === 'assistant') {
-              // Stop once we hit the last assistant response (history)
-              break
-            }
+          // Aider sends file contents as 'user' messages.
+          // Sometimes there is an 'assistant' acknowledgement ("Ok") between the files and the actual prompt.
+          // We need to capture ALL user messages that are part of the current turn.
+          // A simple heuristic is to take all messages after the last System message,
+          // or if no system message, take the trailing user messages.
+          
+          let relevantMessages = []
+          
+          // Find the index of the last system message
+          const lastSystemIndex = messages.findLastIndex(m => m.role === 'system')
+          
+          if (lastSystemIndex !== -1) {
+             // If we have a system message (which usually contains the repo map/instructions),
+             // we take all USER messages that come after it.
+             // We ignore assistant messages in this tail because the Web UI will generate its own response.
+             relevantMessages = messages.slice(lastSystemIndex + 1).filter(m => m.role === 'user')
+          } else {
+             // Fallback: if no system message found (rare), take trailing user messages
+             for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].role === 'user') {
+                  relevantMessages.unshift(messages[i])
+                } else if (messages[i].role === 'assistant') {
+                  break
+                }
+             }
           }
 
           console.log('Received messages from Aider:', messages.map((m) => m.role))
           console.log('System messages count:', systemMessages.length)
-          console.log('Trailing user messages count:', trailingUserMessages.length)
+          if (systemMessages.length > 0) {
+             console.log('First system message length:', systemMessages[0].content.length)
+             console.log('First system message preview:', systemMessages[0].content.substring(0, 50))
+          }
+          console.log('Relevant user messages count:', relevantMessages.length)
 
           let prompt = ''
 
@@ -177,8 +196,8 @@ function startApiServer() {
             prompt += systemMessages.map((m) => m.content).join('\n\n') + '\n\n'
           }
 
-          if (trailingUserMessages.length > 0) {
-            prompt += trailingUserMessages.map((m) => m.content).join('\n\n')
+          if (relevantMessages.length > 0) {
+            prompt += relevantMessages.map((m) => m.content).join('\n\n')
           }
 
           if (!mainWindow) {
