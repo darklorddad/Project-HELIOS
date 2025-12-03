@@ -155,8 +155,25 @@ function startApiServer() {
             (async () => {
               const sleep = (ms) => new Promise(r => setTimeout(r, ms));
               
-              const getInput = () => document.querySelector('textarea, [contenteditable="true"], .ql-editor');
-              const getSendButton = () => document.querySelector('button[aria-label*="Send"], button[aria-label*="Submit"], .send-button, button[data-testid="send-button"]');
+              const getInput = () => document.querySelector('textarea.textarea[aria-label*="Type something"]');
+              const getSendButton = () => document.querySelector('button[aria-label="Run"], button.run-button');
+
+              const getResponseText = () => {
+                const selectors = [
+                  '.chat-turn-container.model .ms-prompt-chunk span',
+                  '.chat-turn-container.model .turn-content span',
+                  '[data-turn-role="Model"] .ms-prompt-chunk span'
+                ];
+                
+                for (const selector of selectors) {
+                  const elements = document.querySelectorAll(selector);
+                  if (elements.length > 0) {
+                    const text = elements[elements.length - 1].innerText;
+                    if (text.length > 20) return text.trim();
+                  }
+                }
+                return '';
+              };
 
               const input = getInput();
               if (!input) throw new Error("Input field not found");
@@ -169,40 +186,29 @@ function startApiServer() {
               const btn = getSendButton();
               if (btn) {
                 btn.click();
+                await sleep(300);
               } else {
-                const event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', which: 13, bubbles: true });
-                input.dispatchEvent(event);
+                input.dispatchEvent(new KeyboardEvent('keydown', { 
+                  key: 'Enter', code: 'Enter', which: 13, bubbles: true 
+                }));
               }
               
               await sleep(2000);
               
-              let lastText = "";
+              let lastText = '';
               let stableCount = 0;
-              const maxRetries = 120; 
               
-              for(let i=0; i<maxRetries; i++) {
-                 await sleep(500);
-                 const allText = document.body.innerText; 
-                 
-                 if (allText.length > lastText.length) {
-                    lastText = allText;
-                    stableCount = 0;
-                 } else {
-                    stableCount++;
-                 }
-                 
-                 if (stableCount > 4 && i > 5) break;
+              for (let i = 0; i < 60; i++) {
+                await sleep(500);
+                const currentText = getResponseText();
+                
+                if (currentText === lastText) stableCount++;
+                else { stableCount = 0; lastText = currentText; }
+                
+                if (stableCount > 5 && lastText.length > 50) break;
               }
               
-              // Attempt to find the last response. 
-              // Note: These selectors are generic and might need tuning for specific web apps.
-              const messageBlocks = document.querySelectorAll('.model-response-text, .message-content, [data-message-author="model"], .response-content');
-              if (messageBlocks.length > 0) {
-                return messageBlocks[messageBlocks.length - 1].innerText;
-              }
-              
-              // Fallback: return the last chunk of text from the body if specific selectors fail
-              return document.body.innerText.slice(-2000); 
+              return lastText || "No response received";
             })()
             `
           )
