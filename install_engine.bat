@@ -68,6 +68,10 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+:: FIX: Downgrade tree-sitter to version compatible with repomap.py
+echo Fixing tree-sitter version...
+"%VENV_DIR%\Scripts\python.exe" -m pip install tree-sitter==0.21.3
+
 :: ---------------------------------------------------------
 :: 6. Create Shortcut
 :: ---------------------------------------------------------
