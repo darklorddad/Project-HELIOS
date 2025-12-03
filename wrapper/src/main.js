@@ -265,14 +265,27 @@ function startApiServer() {
                 // Ensure the element is rendered
                 lastTurn.scrollIntoView({ behavior: "instant", block: "end" });
 
+                // Simulate hover to ensure menu buttons are visible
+                // We target the turn container itself, and specifically the actions container if found
+                lastTurn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                lastTurn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+                
+                const actionsContainer = lastTurn.querySelector('.actions.hover-or-edit');
+                if (actionsContainer) {
+                    actionsContainer.style.opacity = '1'; // Force visibility just in case
+                    actionsContainer.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                }
+                
+                await sleep(200);
+
                 // Try to find the "more_vert" menu button to access "Copy as markdown"
-                // The structure is usually a toolbar with a menu button
-                // We look for a button that contains the 'more_vert' icon text or class
+                // Based on provided HTML: <button ... aria-label="Open options" ... iconname="more_vert" ...>
                 const menuButtons = Array.from(lastTurn.querySelectorAll('button'));
                 const menuButton = menuButtons.find(btn => 
+                    btn.getAttribute('aria-label') === 'Open options' ||
+                    btn.getAttribute('iconname') === 'more_vert' ||
                     btn.innerText.includes('more_vert') || 
-                    btn.querySelector('.material-icons')?.innerText.includes('more_vert') ||
-                    btn.querySelector('.google-symbols')?.innerText.includes('more_vert')
+                    btn.querySelector('.material-symbols-outlined')?.innerText.includes('more_vert')
                 );
                 
                 if (menuButton) {
