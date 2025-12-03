@@ -138,18 +138,17 @@ function startApiServer() {
           const data = JSON.parse(body)
           const messages = data.messages
 
-          // Aider sends the Repo Map and instructions in the 'system' message.
-          // We must combine the System prompt and the User prompt to ensure the Web UI sees the code context.
-          const systemMessage = messages.find((m) => m.role === 'system')
+          // Aider sends the Repo Map and instructions in 'system' messages.
+          // Sometimes there are multiple system messages (e.g. persona + repo map).
+          // We must combine ALL system messages to ensure the Web UI sees the full context.
+          const systemMessages = messages.filter((m) => m.role === 'system')
 
-          // Aider is stateless and sends the full history every time.
-          // The Web UI is stateful. We only want to send the *new* user messages (prompt + files)
-          // and the *current* system message (repo map).
-          // We ignore previous user/assistant history that is already in the Web UI.
-          const newMessages = []
+          // Aider sometimes splits the file context and the actual prompt into multiple 'user' messages at the end.
+          // We need to capture all trailing user messages, not just the very last one.
+          const trailingUserMessages = []
           for (let i = messages.length - 1; i >= 0; i--) {
             if (messages[i].role === 'user') {
-              newMessages.unshift(messages[i])
+              trailingUserMessages.unshift(messages[i])
             } else if (messages[i].role === 'assistant') {
               // Stop once we hit the last assistant response (history)
               break
@@ -157,22 +156,17 @@ function startApiServer() {
           }
 
           console.log('Received messages from Aider:', messages.map((m) => m.role))
-          if (systemMessage)
-            console.log(
-              'System message found, length:',
-              systemMessage.content.length
-            )
-          else console.log('WARNING: No system message found.')
-          console.log('New user messages count:', newMessages.length)
+          console.log('System messages count:', systemMessages.length)
+          console.log('Trailing user messages count:', trailingUserMessages.length)
 
           let prompt = ''
 
-          if (systemMessage) {
-            prompt += systemMessage.content + '\n\n'
+          if (systemMessages.length > 0) {
+            prompt += systemMessages.map((m) => m.content).join('\n\n') + '\n\n'
           }
 
-          if (newMessages.length > 0) {
-            prompt += newMessages.map((m) => m.content).join('\n\n')
+          if (trailingUserMessages.length > 0) {
+            prompt += trailingUserMessages.map((m) => m.content).join('\n\n')
           }
 
           if (!mainWindow) {
