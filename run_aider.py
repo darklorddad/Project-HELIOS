@@ -64,8 +64,8 @@ try:
                     self._lang = OriginalLanguage(*args, **kwargs)
             
             def query(self, source):
-                q = self._lang.query(source)
-                return PatchedQuery(q)
+                # Use Query constructor as language.query() is deprecated
+                return PatchedQuery(self._lang, source)
             
             def __getattr__(self, name):
                 return getattr(self._lang, name)
@@ -99,7 +99,15 @@ try:
                 Compatibility shim for tree-sitter >= 0.24.0 which removed captures()
                 in favor of matches().
                 """
-                matches = self._query.matches(node, start_point, end_point)
+                if hasattr(self._query, 'matches'):
+                    matches = self._query.matches(node, start_point, end_point)
+                elif hasattr(tree_sitter, 'QueryCursor'):
+                    # Fallback for newer tree-sitter where matches() might be on QueryCursor
+                    cursor = tree_sitter.QueryCursor()
+                    matches = cursor.matches(self._query, node, start_point, end_point)
+                else:
+                    raise AttributeError(f"Query object {type(self._query)} has no matches method and QueryCursor not found. Dir: {dir(self._query)}")
+
                 results = []
                 for _, capture_map in matches:
                     for name, nodes in capture_map.items():
