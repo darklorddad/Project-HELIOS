@@ -85,9 +85,9 @@ if %errorlevel% neq 0 (
 )
 
 :: FIX: Downgrade tree-sitter and swap language packs for compatibility
-echo Fixing tree-sitter environment...
-"%VENV_DIR%\Scripts\python.exe" -m pip uninstall -y tree-sitter
-"%VENV_DIR%\Scripts\python.exe" -m pip install tree-sitter==0.24.0
+@REM echo Fixing tree-sitter environment...
+@REM "%VENV_DIR%\Scripts\python.exe" -m pip uninstall -y tree-sitter
+@REM "%VENV_DIR%\Scripts\python.exe" -m pip install tree-sitter==0.21.3
 
 :: ---------------------------------------------------------
 :: 6. Create Shortcut
