@@ -114,7 +114,23 @@ try:
 
         class PatchedParser:
             def __init__(self, *args, **kwargs):
-                self._parser = OriginalParser(*args, **kwargs)
+                # Unwrap args if they are PatchedLanguage
+                new_args = []
+                for arg in args:
+                    if isinstance(arg, PatchedLanguage):
+                        new_args.append(arg._lang)
+                    else:
+                        new_args.append(arg)
+                
+                # Unwrap kwargs just in case
+                new_kwargs = {}
+                for k, v in kwargs.items():
+                    if isinstance(v, PatchedLanguage):
+                        new_kwargs[k] = v._lang
+                    else:
+                        new_kwargs[k] = v
+
+                self._parser = OriginalParser(*new_args, **new_kwargs)
             
             def set_language(self, language):
                 # Unwrap if it's our patched language
