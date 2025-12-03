@@ -103,8 +103,13 @@ try:
                     matches = self._query.matches(node, start_point, end_point)
                 elif hasattr(tree_sitter, 'QueryCursor'):
                     # Fallback for newer tree-sitter where matches() might be on QueryCursor
-                    cursor = tree_sitter.QueryCursor()
-                    matches = cursor.matches(self._query, node, start_point, end_point)
+                    try:
+                        cursor = tree_sitter.QueryCursor()
+                        matches = cursor.matches(self._query, node, start_point, end_point)
+                    except TypeError:
+                        # Some versions might require query in init
+                        cursor = tree_sitter.QueryCursor(self._query)
+                        matches = cursor.matches(node, start_point, end_point)
                 else:
                     raise AttributeError(f"Query object {type(self._query)} has no matches method and QueryCursor not found. Dir: {dir(self._query)}")
 
