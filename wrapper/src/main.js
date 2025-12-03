@@ -141,14 +141,29 @@ function startApiServer() {
           // Aider sends the Repo Map and instructions in the 'system' message.
           // We must combine the System prompt and the User prompt to ensure the Web UI sees the code context.
           const systemMessage = messages.find((m) => m.role === 'system')
-          const lastUserMessage = messages
-            .slice()
-            .reverse()
-            .find((m) => m.role === 'user')
 
-          console.log('Received messages from Aider:', messages.map(m => m.role));
-          if (systemMessage) console.log('System message found, length:', systemMessage.content.length);
-          else console.log('WARNING: No system message found.');
+          // Aider is stateless and sends the full history every time.
+          // The Web UI is stateful. We only want to send the *new* user messages (prompt + files)
+          // and the *current* system message (repo map).
+          // We ignore previous user/assistant history that is already in the Web UI.
+          const newMessages = []
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'user') {
+              newMessages.unshift(messages[i])
+            } else if (messages[i].role === 'assistant') {
+              // Stop once we hit the last assistant response (history)
+              break
+            }
+          }
+
+          console.log('Received messages from Aider:', messages.map((m) => m.role))
+          if (systemMessage)
+            console.log(
+              'System message found, length:',
+              systemMessage.content.length
+            )
+          else console.log('WARNING: No system message found.')
+          console.log('New user messages count:', newMessages.length)
 
           let prompt = ''
 
@@ -156,8 +171,8 @@ function startApiServer() {
             prompt += systemMessage.content + '\n\n'
           }
 
-          if (lastUserMessage) {
-            prompt += lastUserMessage.content
+          if (newMessages.length > 0) {
+            prompt += newMessages.map((m) => m.content).join('\n\n')
           }
 
           if (!mainWindow) {
