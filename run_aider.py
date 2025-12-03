@@ -49,13 +49,26 @@ try:
     # in aider modules picks up our patched version.
     import tree_sitter
     if not hasattr(tree_sitter.Query, "captures"):
-        print("Monkey-patching tree_sitter.Query.captures for compatibility...")
+        print("Monkey-patching tree_sitter (Query, Language, Parser) for compatibility...")
         
         OriginalQuery = tree_sitter.Query
+        OriginalLanguage = tree_sitter.Language
+        OriginalParser = tree_sitter.Parser
 
         class PatchedQuery:
             def __init__(self, *args, **kwargs):
-                self._query = OriginalQuery(*args, **kwargs)
+                # Handle wrapping an existing query object
+                if len(args) == 1 and isinstance(args[0], OriginalQuery):
+                    self._query = args[0]
+                else:
+                    # Unwrap args if they are PatchedLanguage
+                    new_args = []
+                    for arg in args:
+                        if hasattr(arg, "_lang"):
+                            new_args.append(arg._lang)
+                        else:
+                            new_args.append(arg)
+                    self._query = OriginalQuery(*new_args, **kwargs)
 
             def captures(self, node, start_point=None, end_point=None):
                 """
@@ -75,7 +88,51 @@ try:
             def __getattr__(self, name):
                 return getattr(self._query, name)
 
+        class PatchedLanguage:
+            def __init__(self, *args, **kwargs):
+                if 'existing_lang' in kwargs:
+                    self._lang = kwargs['existing_lang']
+                else:
+                    self._lang = OriginalLanguage(*args, **kwargs)
+            
+            def query(self, source):
+                q = self._lang.query(source)
+                return PatchedQuery(q)
+            
+            def __getattr__(self, name):
+                return getattr(self._lang, name)
+
+        class PatchedParser:
+            def __init__(self, *args, **kwargs):
+                self._parser = OriginalParser(*args, **kwargs)
+            
+            def set_language(self, language):
+                # Unwrap if it's our patched language
+                if hasattr(language, "_lang"):
+                    self._parser.set_language(language._lang)
+                else:
+                    self._parser.set_language(language)
+            
+            def __getattr__(self, name):
+                return getattr(self._parser, name)
+
         tree_sitter.Query = PatchedQuery
+        tree_sitter.Language = PatchedLanguage
+        tree_sitter.Parser = PatchedParser
+
+        # Also patch tree_sitter_languages if present, as it returns OriginalLanguage instances
+        try:
+            import tree_sitter_languages
+            OriginalGetLanguage = tree_sitter_languages.get_language
+            
+            def patched_get_language(name):
+                lang = OriginalGetLanguage(name)
+                return PatchedLanguage(existing_lang=lang)
+            
+            tree_sitter_languages.get_language = patched_get_language
+            print("Monkey-patched tree_sitter_languages.get_language")
+        except ImportError:
+            pass
 
     # 4. Import the exceptions module
     from aider import exceptions
