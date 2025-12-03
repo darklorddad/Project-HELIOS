@@ -62,13 +62,16 @@ try:
         
         OriginalQuery = tree_sitter.Query
 
-        class PatchedQuery(OriginalQuery):
+        class PatchedQuery:
+            def __init__(self, *args, **kwargs):
+                self._query = OriginalQuery(*args, **kwargs)
+
             def captures(self, node, start_point=None, end_point=None):
                 """
                 Compatibility shim for tree-sitter >= 0.24.0 which removed captures()
                 in favor of matches().
                 """
-                matches = self.matches(node, start_point, end_point)
+                matches = self._query.matches(node, start_point, end_point)
                 results = []
                 for _, capture_map in matches:
                     for name, nodes in capture_map.items():
@@ -77,6 +80,9 @@ try:
                         for n in nodes:
                             results.append((n, name))
                 return results
+
+            def __getattr__(self, name):
+                return getattr(self._query, name)
 
         tree_sitter.Query = PatchedQuery
 
