@@ -236,17 +236,23 @@ function startApiServer() {
             (async () => {
               const sleep = (ms) => new Promise(r => setTimeout(r, ms));
               
-              await sleep(1000); // Wait for paste to complete and UI to update
+              await sleep(1500); // Wait for paste to complete and UI to update
 
               // 2. Trigger Generation
-              const runButton = document.querySelector('button.run-button');
+              // Try multiple selectors for the run button
+              const runButton = document.querySelector('button.run-button, button[aria-label="Run"], button[aria-label="Send message"]');
+              
               if (runButton && !runButton.disabled) {
                 runButton.click();
               } else {
                 // Fallback to Enter key if button is unavailable/disabled
-                input.dispatchEvent(new KeyboardEvent('keydown', { 
-                  key: 'Enter', code: 'Enter', which: 13, bubbles: true, ctrlKey: true 
-                }));
+                const input = document.querySelector('textarea.textarea');
+                if (input) {
+                    input.focus();
+                    input.dispatchEvent(new KeyboardEvent('keydown', { 
+                      key: 'Enter', code: 'Enter', which: 13, bubbles: true, ctrlKey: true 
+                    }));
+                }
               }
 
               // 3. Wait for Generation to Start (Run button changes state)
