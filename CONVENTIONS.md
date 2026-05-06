@@ -3,10 +3,10 @@
 ## 1. Upstream Management
 *   **Remote Name:** `upstream`
 *   **URL:** `https://github.com/paul-gauthier/aider.git`
-*   **Strategy:** Maintain a "detached downstream" repository using a **Vendor Branch** pattern (`vendor-upstream`). We do not share our main commit history with upstream to keep our repository clean and avoid the "forked" label on GitHub, while retaining a clean merge base for updates.
+*   **Strategy:** Maintain a "detached downstream" repository using a **Vendor Branch** pattern (`vendor-upstream`). The main commit history is not shared with upstream to keep the repository clean and avoid the "forked" label on GitHub, while retaining a clean merge base for updates.
 
 ## 2. Syncing with Upstream
-When importing new releases or batches of updates from the official Aider repository, use the vendor branch to prevent unrelated history conflicts:
+When importing new releases or batches of updates from the official Aider repository, the vendor branch must be used to prevent unrelated history conflicts:
 1.  **Update Vendor Branch:**
     ```bash
     git checkout vendor-upstream
@@ -19,15 +19,15 @@ When importing new releases or batches of updates from the official Aider reposi
     git checkout main
     git merge vendor-upstream
     ```
-3.  **Protect Identity and Configuration Files:** Git will typically respect our custom files, but upstream changes to configuration files require manual review before committing the merge:
-    *   **README.md:** Keep our version (`git checkout HEAD -- README.md`).
+3.  **Protect Identity and Configuration Files:** Git will typically respect custom files, but upstream changes to configuration files require manual review before committing the merge:
+    *   **README.md:** Keep the local version (`git checkout HEAD -- README.md`).
     *   **CONTRIBUTING.md/LICENSE.txt:** Delete/do not restore (repository is currently private).
-    *   **.gitignore:** Review conflicts. Keep our custom ignores (like `.venv/`) but append any *new* ignores upstream introduced.
+    *   **.gitignore:** Review conflicts. Keep custom ignores (like `.venv/`) but append any *new* ignores upstream introduced.
     *   **pyproject.toml:** Carefully merge conflicts. **Always retain HELIOS's `requires-python = ">=3.11"`** (or newer) to protect the `uv` environment. Accept upstream's new dependency additions.
     *   **uv.lock:** Immediately after merging `pyproject.toml`, run `uv sync` to regenerate the lockfile with any new upstream dependencies and stage the updated `uv.lock` file for the merge commit.
 
 ## 3. Merging Official PRs
-To pull a specific Pull Request from the official Aider repository, apply it as a patch to avoid importing unrelated commit history:
+To pull a specific Pull Request from the official Aider repository, it must be applied as a patch to avoid importing unrelated commit history:
 1.  **Download Patch:** `curl -L https://github.com/paul-gauthier/aider/pull/ID.patch -o feature.patch`
 2.  **Apply Patch:** `git apply feature.patch`
 3.  **Clean up:** `rm feature.patch`
