@@ -4,7 +4,7 @@
 *   **Remote Name:** `upstream`
 *   **URL:** `https://github.com/paul-gauthier/aider.git`
 *   **Strategy:** Maintain a "detached downstream" repository using a **Vendor Branch** pattern (`vendor-upstream`). The main commit history is not shared with upstream to keep the repository clean and avoid the "forked" label on GitHub, while retaining a clean merge base for updates.
-*   **Initialisation:** Run the following one-time setup to create the isolated vendor branch:
+*   **Initialisation:** The following one-time setup must be run to create the isolated vendor branch:
     ```bash
     git checkout --orphan vendor-upstream
     git fetch upstream
@@ -29,28 +29,28 @@ When importing new releases or batches of updates from the official Aider reposi
     git merge vendor-upstream
     ```
 3.  **Protect Identity and Configuration Files:** Git will typically respect custom files, but upstream changes to configuration files require manual review before committing the merge:
-    *   **README.md:** Keep the local version (`git checkout HEAD -- README.md`).
-    *   **CONTRIBUTING.md/LICENSE.txt:** Delete/do not restore (repository is currently private).
-    *   **.gitignore:** Review conflicts. Keep custom ignores (like `.venv/`) but append any *new* ignores upstream introduced.
-    *   **pyproject.toml:** Carefully merge conflicts. **Always retain HELIOS's `requires-python = ">=3.11"`** (or newer) to protect the `uv` environment. Accept upstream's new dependency additions.
-    *   **uv.lock:** Immediately after merging `pyproject.toml`, run `uv sync` to regenerate the lockfile with any new upstream dependencies and stage the updated `uv.lock` file for the merge commit.
+    *   **README.md:** The local version must be kept (`git checkout HEAD -- README.md`).
+    *   **CONTRIBUTING.md/LICENSE.txt:** These files must be deleted or not restored as the repository is currently private.
+    *   **.gitignore:** Conflicts must be reviewed. Custom ignores (such as `.venv`) must be kept but any new ignores introduced by upstream must be appended.
+    *   **pyproject.toml:** Conflicts must be merged carefully. HELIOS's `requires-python = ">=3.11"` (or newer) must always be retained to protect the `uv` environment. New dependency additions from upstream must be accepted.
+    *   **uv.lock:** Immediately after merging `pyproject.toml`, `uv sync` must be run to regenerate the lockfile with any new upstream dependencies and the updated `uv.lock` file must be staged for the merge commit.
 
 ## 3. Merging Official PRs
 To pull a specific Pull Request from the official Aider repository, it must be applied as a patch to avoid importing unrelated commit history:
 1.  **Download Patch:** `curl -L https://github.com/paul-gauthier/aider/pull/ID.patch -o feature.patch`
-2.  **Apply Patch:** `git apply feature.patch` (Use `git am feature.patch` instead if you wish to retain the original author metadata and commit message).
+2.  **Apply Patch:** `git apply feature.patch` (`git am feature.patch` may be used instead if retention of the original author metadata and commit message is desired).
 3.  **Clean up:** `rm feature.patch`
 4.  **Commit:** `git add .` followed by `git commit -m "feat: apply upstream PR #ID"`
 
-*Note: Manually applying patches means that when a future vendor drop includes the exact same Pull Request, Git might flag a merge conflict if upstream slightly modified the code before merging. During conflict resolution, simply accept the upstream version.*
+*Note: Manually applying patches means that when a future vendor drop includes the exact same Pull Request, Git might flag a merge conflict if upstream slightly modified the code before merging. During conflict resolution, the upstream version must be accepted.*
 
 ## 4. Development Rules
-*   **File Layout:** Do not move or rename files inside the `aider/` core directory. Keeping the structure identical to upstream minimises merge conflicts.
-*   **Linguistic Style:** Use British English and strictly avoid the use of ampersands. Write all documentation and comments in the third person perspective. Do not use Oxford commas and do not include spaces before or after a slash (`/`).
-*   **Extensions:** Place new features in separate files or modules and import them into the core logic, rather than writing extensive custom code directly inside Aider's original functions.
+*   **File Layout:** Files inside the `aider` core directory must not be moved or renamed. Keeping the structure identical to upstream minimises merge conflicts.
+*   **Linguistic Style:** British English must be used and ampersands must be strictly avoided. All documentation and comments must be written in the third person perspective. Oxford commas must not be used and spaces must not be included before or after a slash (`/`).
+*   **Extensions:** New features must be placed in separate files or modules and imported into the core logic rather than writing extensive custom code directly inside Aider's original functions.
 
 ## 5. Dependency and Environment Management
-*   **Tooling:** Use `uv` for all dependency management and virtual environment creation. Avoid using standard `pip` or `venv` directly.
+*   **Tooling:** `uv` must be used for all dependency management and virtual environment creation. The direct use of standard `pip` or `venv` must be avoided.
 *   **Project Metadata:** `pyproject.toml` acts as the source of truth for all project configurations and high-level requirements.
 *   **Lockfiles:** The `uv.lock` file must always be committed to version control to guarantee deterministic builds across all environments.
 *   **Python Version:** The `.python-version` file must be committed to enforce the baseline Python interpreter for the project.
