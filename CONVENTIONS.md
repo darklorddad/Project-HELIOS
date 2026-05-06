@@ -19,10 +19,10 @@ When importing new releases or batches of updates from the official Aider reposi
     git checkout main
     git merge vendor-upstream
     ```
-3.  **Protect Identity Files:** Git will typically respect our custom files during a standard merge. However, if conflicts occur or upstream introduces new identity files, ensure we protect our own:
+3.  **Protect Identity Files:** Git will typically respect our custom files during a standard merge. However, if conflicts occur or upstream introduces new identity files, handle them as follows:
     *   **README.md:** Keep our version.
-    *   **CONTRIBUTING.md:** Do not restore.
-    *   **LICENSE.txt:** Protect our version of the licence.
+    *   **CONTRIBUTING.md:** Delete / do not restore (repository is currently private).
+    *   **LICENSE.txt:** Delete / do not restore (repository is currently private).
 
 ## 3. Merging Official PRs
 To pull a specific Pull Request from the official Aider repository, apply it as a patch to avoid importing unrelated commit history:
@@ -35,3 +35,9 @@ To pull a specific Pull Request from the official Aider repository, apply it as 
 *   **File Layout:** Do not move or rename files inside the `aider/` core directory. Keeping the structure identical to upstream minimises merge conflicts.
 *   **Linguistic Style:** Use British English and strictly avoid the use of ampersands.
 *   **Extensions:** Place new features in separate files or modules and import them into the core logic, rather than writing extensive custom code directly inside Aider's original functions.
+
+## 5. Dependency and Environment Management
+*   **Tooling:** Use `uv` for all dependency management and virtual environment creation. Avoid using standard `pip` or `venv` directly.
+*   **Project Metadata:** `pyproject.toml` acts as the source of truth for all project configurations and high-level requirements.
+*   **Lockfiles:** The `uv.lock` file must always be committed to version control to guarantee deterministic builds across all environments.
+*   **Python Version:** The `.python-version` file must be committed to enforce the baseline Python interpreter (e.g., `3.12`) for the project.
