@@ -9,10 +9,9 @@
 When importing new releases or batches of updates from the official Aider repository:
 1.  **Fetch:** `git fetch upstream`
 2.  **Merge:** `git merge upstream/main --squash --allow-unrelated-histories`
-3.  **Protect Identity Files:** Before committing the merge, ensure we don't restore deleted files or overwrite our own:
+3.  **Protect Identity Files:** Before committing the merge, ensure we do not restore deleted files or overwrite our own:
     *   **README.md:** Keep our version. Run `git checkout HEAD -- README.md`.
     *   **CONTRIBUTING.md:** Do not restore. Run `git rm CONTRIBUTING.md`.
-    *   **LICENSE.txt:** Ensure the original Apache 2.0 license remains for legal compliance.
 4.  **Commit:** `git commit -m "chore: sync with upstream Aider at [date/version]"`
 
 ## 3. Merging Official PRs
