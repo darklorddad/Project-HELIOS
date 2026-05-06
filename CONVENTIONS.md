@@ -21,10 +21,10 @@ When importing new releases or batches of updates from the official Aider reposi
     ```
 3.  **Protect Identity and Configuration Files:** Git will typically respect our custom files, but upstream changes to configuration files require manual review before committing the merge:
     *   **README.md:** Keep our version (`git checkout HEAD -- README.md`).
-    *   **CONTRIBUTING.md / LICENSE.txt:** Delete / do not restore (repository is currently private).
+    *   **CONTRIBUTING.md/LICENSE.txt:** Delete/do not restore (repository is currently private).
     *   **.gitignore:** Review conflicts. Keep our custom ignores (like `.venv/`) but append any *new* ignores upstream introduced.
     *   **pyproject.toml:** Carefully merge conflicts. **Always retain HELIOS's `requires-python = ">=3.11"`** (or newer) to protect the `uv` environment. Accept upstream's new dependency additions.
-    *   **uv.lock:** Immediately after merging `pyproject.toml`, run `uv sync` to regenerate the lockfile with any new upstream dependencies, and stage the updated `uv.lock` file for the merge commit.
+    *   **uv.lock:** Immediately after merging `pyproject.toml`, run `uv sync` to regenerate the lockfile with any new upstream dependencies and stage the updated `uv.lock` file for the merge commit.
 
 ## 3. Merging Official PRs
 To pull a specific Pull Request from the official Aider repository, apply it as a patch to avoid importing unrelated commit history:
@@ -42,4 +42,4 @@ To pull a specific Pull Request from the official Aider repository, apply it as 
 *   **Tooling:** Use `uv` for all dependency management and virtual environment creation. Avoid using standard `pip` or `venv` directly.
 *   **Project Metadata:** `pyproject.toml` acts as the source of truth for all project configurations and high-level requirements.
 *   **Lockfiles:** The `uv.lock` file must always be committed to version control to guarantee deterministic builds across all environments.
-*   **Python Version:** The `.python-version` file must be committed to enforce the baseline Python interpreter (e.g., `3.12`) for the project.
+*   **Python Version:** The `.python-version` file must be committed to enforce the baseline Python interpreter for the project.
