@@ -3,7 +3,7 @@
 ## 1. Upstream Management
 *   **Remote Name:** `upstream`
 *   **URL:** `https://github.com/paul-gauthier/aider.git`
-*   **Strategy:** Maintain a "detached downstream" repository using a **Vendor Branch** pattern (`vendor-upstream`). The main commit history is not shared with upstream to keep the repository clean and avoid the "forked" label on GitHub, while retaining a clean merge base for updates.
+*   **Strategy:** A "detached downstream" repository must be maintained using a **Vendor Branch** pattern (`vendor-upstream`). The main commit history is not shared with upstream to keep the repository clean and avoid the "forked" label on GitHub, while retaining a clean merge base for updates.
 *   **Initialisation:** The following one-time setup must be run to create the isolated vendor branch:
     ```bash
     git checkout --orphan vendor-upstream
