@@ -35,7 +35,7 @@ To pull a specific Pull Request from the official Aider repository, apply it as 
 
 ## 4. Development Rules
 *   **File Layout:** Do not move or rename files inside the `aider/` core directory. Keeping the structure identical to upstream minimises merge conflicts.
-*   **Linguistic Style:** Use British English and strictly avoid the use of ampersands.
+*   **Linguistic Style:** Use British English and strictly avoid the use of ampersands. Write all documentation and comments in the third person perspective. Do not use Oxford commas and do not include spaces before or after a slash (`/`).
 *   **Extensions:** Place new features in separate files or modules and import them into the core logic, rather than writing extensive custom code directly inside Aider's original functions.
 
 ## 5. Dependency and Environment Management
