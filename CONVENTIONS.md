@@ -3,23 +3,33 @@
 ## 1. Upstream Management
 *   **Remote Name:** `upstream`
 *   **URL:** `https://github.com/paul-gauthier/aider.git`
-*   **Strategy:** Maintain a "detached downstream" repository. We do not share commit history with upstream to keep our repository clean and avoid the "forked" label on GitHub.
+*   **Strategy:** Maintain a "detached downstream" repository using a **Vendor Branch** pattern (`vendor-upstream`). We do not share our main commit history with upstream to keep our repository clean and avoid the "forked" label on GitHub, while retaining a clean merge base for updates.
 
 ## 2. Syncing with Upstream
-When importing new releases or batches of updates from the official Aider repository:
-1.  **Fetch:** `git fetch upstream`
-2.  **Merge:** `git merge upstream/main --squash --allow-unrelated-histories`
-3.  **Protect Identity Files:** Before committing the merge, ensure we do not restore deleted files or overwrite our own:
-    *   **README.md:** Keep our version. Run `git checkout HEAD -- README.md`.
-    *   **CONTRIBUTING.md:** Do not restore. Run `git rm CONTRIBUTING.md`.
-    *   **LICENSE.txt:** Protect our version of the licence and ensure the original is not restored. Run `git checkout HEAD -- LICENSE.txt` or `git rm LICENSE.txt`.
-4.  **Commit:** `git commit -m "chore: sync with upstream Aider at [date/version]"`
+When importing new releases or batches of updates from the official Aider repository, use the vendor branch to prevent unrelated history conflicts:
+1.  **Update Vendor Branch:**
+    ```bash
+    git checkout vendor-upstream
+    git fetch upstream
+    git read-tree -u --reset upstream/main
+    git commit -m "chore: vendor drop Aider update [date/version]"
+    ```
+2.  **Merge into Main:**
+    ```bash
+    git checkout main
+    git merge vendor-upstream
+    ```
+3.  **Protect Identity Files:** Git will typically respect our custom files during a standard merge. However, if conflicts occur or upstream introduces new identity files, ensure we protect our own:
+    *   **README.md:** Keep our version.
+    *   **CONTRIBUTING.md:** Do not restore.
+    *   **LICENSE.txt:** Protect our version of the licence.
 
 ## 3. Merging Official PRs
-To pull a specific Pull Request from the official Aider repository:
-1.  **Fetch PR:** `git fetch upstream pull/ID/head:temp-feature-branch`
-2.  **Merge:** `git merge temp-feature-branch --squash --allow-unrelated-histories`
-3.  **Cleanup:** `git branch -D temp-feature-branch`
+To pull a specific Pull Request from the official Aider repository, apply it as a patch to avoid importing unrelated commit history:
+1.  **Download Patch:** `curl -L https://github.com/paul-gauthier/aider/pull/ID.patch -o feature.patch`
+2.  **Apply Patch:** `git apply feature.patch`
+3.  **Clean up:** `rm feature.patch`
+4.  **Commit:** `git add .` followed by `git commit -m "feat: apply upstream PR #ID"`
 
 ## 4. Development Rules
 *   **File Layout:** Do not move or rename files inside the `aider/` core directory. Keeping the structure identical to upstream minimises merge conflicts.
