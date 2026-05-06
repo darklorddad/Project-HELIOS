@@ -4,6 +4,15 @@
 *   **Remote Name:** `upstream`
 *   **URL:** `https://github.com/paul-gauthier/aider.git`
 *   **Strategy:** Maintain a "detached downstream" repository using a **Vendor Branch** pattern (`vendor-upstream`). The main commit history is not shared with upstream to keep the repository clean and avoid the "forked" label on GitHub, while retaining a clean merge base for updates.
+*   **Initialisation:** Run the following one-time setup to create the isolated vendor branch:
+    ```bash
+    git checkout --orphan vendor-upstream
+    git fetch upstream
+    git read-tree -u --reset upstream/main
+    git commit -m "chore: initial vendor drop of Aider [version]"
+    git checkout main
+    git merge vendor-upstream --allow-unrelated-histories
+    ```
 
 ## 2. Syncing with Upstream
 When importing new releases or batches of updates from the official Aider repository, the vendor branch must be used to prevent unrelated history conflicts:
@@ -29,9 +38,11 @@ When importing new releases or batches of updates from the official Aider reposi
 ## 3. Merging Official PRs
 To pull a specific Pull Request from the official Aider repository, it must be applied as a patch to avoid importing unrelated commit history:
 1.  **Download Patch:** `curl -L https://github.com/paul-gauthier/aider/pull/ID.patch -o feature.patch`
-2.  **Apply Patch:** `git apply feature.patch`
+2.  **Apply Patch:** `git apply feature.patch` (Use `git am feature.patch` instead if you wish to retain the original author metadata and commit message).
 3.  **Clean up:** `rm feature.patch`
 4.  **Commit:** `git add .` followed by `git commit -m "feat: apply upstream PR #ID"`
+
+*Note: Manually applying patches means that when a future vendor drop includes the exact same Pull Request, Git might flag a merge conflict if upstream slightly modified the code before merging. During conflict resolution, simply accept the upstream version.*
 
 ## 4. Development Rules
 *   **File Layout:** Do not move or rename files inside the `aider/` core directory. Keeping the structure identical to upstream minimises merge conflicts.
