@@ -31,8 +31,8 @@ When importing new releases or batches of updates from the official Aider reposi
 3.  **Protect Identity and Configuration Files:** Git will typically respect custom files, but upstream changes to configuration files require manual review before committing the merge:
     *   **README.md:** The local version must be kept (`git checkout HEAD -- README.md`).
     *   **CONTRIBUTING.md/LICENSE.txt:** These files must be deleted or not restored as the repository is currently private.
-    *   **.gitignore:** Conflicts must be reviewed. Custom ignores (such as `.venv`) must be kept but any new ignores introduced by upstream must be appended.
-    *   **pyproject.toml:** Conflicts must be merged carefully. HELIOS's `requires-python = ">=3.11"` (or newer) must always be retained to protect the `uv` environment. New dependency additions from upstream must be accepted.
+    *   **.gitignore:** Conflicts must be reviewed. Custom ignores must be kept but any new ignores introduced by upstream must be appended.
+    *   **pyproject.toml:** Conflicts must be merged carefully. New dependency additions from upstream must be accepted.
     *   **uv.lock:** Immediately after merging `pyproject.toml`, `uv sync` must be run to regenerate the lockfile with any new upstream dependencies and the updated `uv.lock` file must be staged for the merge commit.
 
 ## 3. Merging Official PRs
